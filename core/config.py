@@ -50,7 +50,10 @@ RETRIEVER_TOP_K = 5
 # the context. 0.3 is a sane default for this model; tune via .env if needed.
 SIMILARITY_THRESHOLD = float(os.getenv("SIMILARITY_THRESHOLD", "0.3"))
 
-EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+# Multilingual model (handles Vietnamese well). Runs locally on CPU.
+# The old all-MiniLM-L6-v2 is English-only and gives noisy similarity on
+# Vietnamese text (unrelated VI chunks score high), so we use the multilingual one.
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "paraphrase-multilingual-MiniLM-L12-v2")
 CHROMA_COLLECTION = "research_docs"
 
 HTTP_TIMEOUT = 120.0

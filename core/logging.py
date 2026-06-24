@@ -11,6 +11,16 @@ def _configure() -> None:
     global _CONFIGURED
     if _CONFIGURED:
         return
+
+    # Windows consoles default to cp1252, which cannot encode Vietnamese (or most
+    # non-Latin text) — printing/logging such text would raise UnicodeEncodeError.
+    # Force UTF-8 on the standard streams so the CLI works in any language.
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
+
     fmt = "%(asctime)s | %(levelname)-7s | %(name)s | %(message)s"
     formatter = logging.Formatter(fmt, datefmt="%H:%M:%S")
 

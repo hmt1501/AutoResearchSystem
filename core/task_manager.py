@@ -18,7 +18,7 @@ from core.logging import get_logger
 from output import markdown, metadata, pdf, word
 from rag.retriever import retrieve_multi
 from rag.vector_db import VectorDB
-from research import auto_fix, query_rewriter, verification
+from research import auto_fix, query_rewriter, synthesizer, verification
 
 log = get_logger("task_manager")
 
@@ -53,10 +53,15 @@ class TaskManager:
         overall = "done" if all(r["status"] == "done" for r in results) else "failed"
         self.db.update_task_status(task_id, overall)
 
-        exports = self._export(topic, task_id, results)
+        # Synthesize a cohesive report (summary/intro/synthesis/conclusion) from the Q&A.
+        if progress:
+            progress(len(questions), len(questions), "Synthesizing report", "running")
+        overview = synthesizer.synthesize(topic, results)
+
+        exports = self._export(topic, task_id, results, overview)
         log.info("=== Run complete task=%s status=%s ===", task_id, overall)
         return {"task_id": task_id, "topic": topic, "status": overall,
-                "results": results, "exports": exports}
+                "results": results, "overview": overview, "exports": exports}
 
     def _answer_one(self, task_id: str, question: str) -> dict:
         # 1. Multi-query retrieval
@@ -105,13 +110,14 @@ class TaskManager:
             "retry_count": retry_count,
         }
 
-    def _export(self, topic: str, task_id: str, results: List[dict]) -> dict:
+    def _export(self, topic: str, task_id: str, results: List[dict],
+                overview: dict = None) -> dict:
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         stem = f"report_{ts}"
         out_dir = Path(config.OUTPUTS_DIR)
 
-        md_path = markdown.write(topic, results, out_dir, stem)
-        docx_path = word.write(topic, results, out_dir, stem)
+        md_path = markdown.write(topic, results, out_dir, stem, overview)
+        docx_path = word.write(topic, results, out_dir, stem, overview)
         pdf_path = pdf.write(docx_path, out_dir, stem)
         meta_path = metadata.write(topic, task_id, results, ts, out_dir, stem)
 

@@ -33,7 +33,8 @@ def main() -> None:
     parser.add_argument("--docs", default=str(config.DOCUMENTS_DIR),
                         help="Directory of source documents")
     parser.add_argument("--questions", type=int, default=5,
-                        help="Number of questions to generate")
+                        help="Research depth: number of internal aspects to analyze "
+                             "(not shown in the report; higher = more comprehensive)")
     parser.add_argument("--no-ingest", action="store_true",
                         help="Skip ingestion and reuse the existing vector store")
     args = parser.parse_args()

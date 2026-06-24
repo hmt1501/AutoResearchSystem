@@ -8,29 +8,42 @@ from core.logging import get_logger
 log = get_logger("markdown")
 
 
-def render(topic: str, results: List[dict]) -> str:
-    """results: [{question, answer, score, verdict, reason, status, model_used, context}]."""
+def render(topic: str, results: List[dict], overview: dict = None) -> str:
+    """results: [{question, answer, score, ...}]; overview: synthesis sections (optional)."""
+    overview = overview or {}
     lines = [f"# Research Report: {topic}", ""]
-    passed = sum(1 for r in results if r["status"] == "done")
-    lines.append(f"_Questions: {len(results)} | Passed: {passed} | Failed: {len(results) - passed}_")
-    lines.append("")
-    for i, r in enumerate(results, 1):
-        badge = "PASS" if r["status"] == "done" else "FAILED"
-        lines.append(f"## Q{i}. {r['question']}")
-        lines.append(f"**Status:** {badge} | **Score:** {r['score']:.2f} | **Model:** {r['model_used']}")
-        lines.append("")
-        lines.append(r["answer"] or "_(no answer)_")
-        lines.append("")
-        if r.get("reason"):
-            lines.append(f"> Reviewer: {r['reason']}")
-            lines.append("")
+
+    # --- Synthesized research report ---
+    has_overview = False
+    if overview.get("executive_summary"):
+        lines += ["## Executive Summary", "", overview["executive_summary"], ""]
+        has_overview = True
+    if overview.get("introduction"):
+        lines += ["## Introduction", "", overview["introduction"], ""]
+        has_overview = True
+    if overview.get("synthesis"):
+        lines += ["## Key Findings & Analysis", "", overview["synthesis"], ""]
+        has_overview = True
+    if overview.get("conclusion"):
+        lines += ["## Conclusion", "", overview["conclusion"], ""]
+        has_overview = True
+
+    # Fallback: if synthesis could not be produced, render the gathered findings
+    # as plain prose (still no Q&A framing) so the report is never empty.
+    if not has_overview:
+        lines += ["## Findings", ""]
+        for r in results:
+            if r.get("answer"):
+                lines += [r["answer"], ""]
+
     return "\n".join(lines)
 
 
-def write(topic: str, results: List[dict], out_dir: Path = None, stem: str = "report") -> Path:
+def write(topic: str, results: List[dict], out_dir: Path = None,
+          stem: str = "report", overview: dict = None) -> Path:
     out_dir = Path(out_dir or config.OUTPUTS_DIR)
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / f"{stem}.md"
-    path.write_text(render(topic, results), encoding="utf-8")
+    path.write_text(render(topic, results, overview), encoding="utf-8")
     log.info("Wrote Markdown report: %s", path)
     return path

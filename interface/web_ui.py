@@ -110,7 +110,13 @@ def build_ui():
                                           file_count="multiple")
                         r_topic = gr.Textbox(label="Topic",
                                              placeholder="e.g. AI in healthcare")
-                        r_nq = gr.Slider(1, 10, value=5, step=1, label="Number of questions")
+                        r_nq = gr.Slider(
+                            1, 10, value=5, step=1,
+                            label="Độ sâu nghiên cứu (số khía cạnh phân tích)",
+                            info="Số góc độ hệ thống tự phân tích để viết báo cáo. "
+                                 "Cao hơn = bao quát hơn nhưng chậm và tốn token hơn. "
+                                 "Các câu hỏi này dùng nội bộ, không hiện trong báo cáo.",
+                        )
                         r_btn = gr.Button("Run Research", variant="primary")
                     with gr.Column():
                         r_status = gr.Textbox(label="Progress", lines=16)
