@@ -1,0 +1,8 @@
+httpx
+python-dotenv
+sentence-transformers
+chromadb
+python-docx
+pypdf
+docx2pdf
+gradio

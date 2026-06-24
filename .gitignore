@@ -1,0 +1,13 @@
+.env
+.claude/
+__pycache__/
+*.pyc
+.venv/
+venv/
+data/vector_store/
+data/outputs/
+data/documents/*
+!data/documents/.gitkeep
+!data/documents/sample_ai_healthcare.md
+*.sqlite3
+*.db
